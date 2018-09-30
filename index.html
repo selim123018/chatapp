@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+ <meta charset="UTF-8"> 
+<head>
+  <link rel="stylesheet" type="text/css" href="public/style.css">
+</head>
+<body>
+  <div class="chat">
+      <h1>
+        Chatapp
+        <button class="clear">Clear</button>
+      </h1>
+    <input type="text" class="chat-name" placeholder="Enter your name">
+
+    <div class="chat-message">
+     
+        
+      </div>
+
+    <textarea placeholder="Enter your message"></textarea>
+
+    <div class="chat-status">Status:<span>Idle</span></div>
+  </div>
+  
+<script src="http://127.0.0.1:4000/socket.io/socket.io.js"></script>
+<script>
+  (function(){
+    var getNode=function(s){
+      return document.querySelector(s);
+    }
+
+    // get elements
+    var status=getNode('.chat-status span');
+    var messages=getNode('.chat-message')
+    var textarea=getNode('.chat textarea');
+    var chatname=getNode('.chat-name');
+    var clearbtn=getNode('.clear');
+    
+    // set default status
+    var statusDefault=status.textContent;
+
+    var setStatus=function(s){
+        
+        // set status      
+        status.textContent=s;
+
+        if(s!==statusDefault){
+
+          var delay=setTimeout(function(){
+              setStatus(statusDefault);
+              clearInterval(delay);
+          },4000);
+        }
+    };
+
+     try{
+      var socket=io.connect('http://127.0.0.1:4000');
+     } catch(e){
+
+       //Set status to warn user
+      }
+
+      if(socket!==undefined){
+
+        
+        //listen for output
+        socket.on('output',function(data){
+
+          if(data.length){
+
+            for(var x=0;x<data.length; x=x+1){
+
+              var message=document.createElement('div');
+              message.setAttribute('class','.chat-message');
+              message.textContent=data[x].name +': ' +data[x].message;
+
+              messages.appendChild(message);
+              messages.insertBefore(message, messages.lastChild);
+            }
+          }
+        });
+
+
+        //listen for status
+        socket.on('status',function(data){
+          setStatus((typeof data === 'Object')? data.message:data);
+
+          if(data.clear === true){
+            textarea.value='';
+          }
+        });
+      
+        textarea.addEventListener('keydown',function(event){
+    
+     if(event.which === 13 && event.shiftKey ==false)
+
+     {
+       socket.emit('input',{
+        name:chatname.value,
+        message:textarea.value 
+      });  
+
+       event.preventDefault();
+     }
+    })
+     
+     // handle chat clear
+     clearbtn.addEventListener('click',function(){
+      socket.emit('clear');
+     });
+
+     // clear message
+     socket.on('cleared',function(){
+      messages.textContent='';
+     });
+    }
+
+   })();
+ </script>
+
+</body>
+</html>
+
+
+  
