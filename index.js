@@ -3,11 +3,14 @@ var port=process.env.PORT || 4000;
 var client=require('socket.io').listen(port).sockets;
 
 
-//to connet database  
-mongodb.connect('mongodb://localhost/mongochat',function(err,db){ 
+//to connet database
+mongodb.connect('mongodb://localhost/mongochat',function(err,db){
     if(err){
        throw err;
-    }   
+    }
+
+
+
 
     console.log('database connected succesfully');
 
@@ -18,14 +21,14 @@ mongodb.connect('mongodb://localhost/mongochat',function(err,db){
       // create function to send status
       sendStatus=function(s){
         socket.emit('status',s);
-      } 
+      }
 
         // get chat from mongodb collection
         chat.find().limit(100).sort({_id:1}).toArray(function(err,res){
          if(err)
           {
-             throw err; 
-          } 
+             throw err;
+          }
 
            //emit the message
            socket.emit('output',res);
